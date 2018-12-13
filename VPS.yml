@@ -1,0 +1,74 @@
+---
+- name: New VPS
+  hosts: new_VPS
+  become: no
+  
+  
+  tasks:
+    - name: Install epel-release
+      yum: name=epel-release state=latest
+    
+    - name: Install nginx
+      yum: name=nginx state=latest
+      
+    - name: Enable service nginx
+      service:
+        name: nginx
+        enabled: yes
+        state: started
+      
+    - name: Install proftpd
+      yum: name=proftpd state=latest
+      
+    - name: Enable service proftpd
+      service:
+        name: proftpd
+        enabled: yes
+        state: started
+        
+    - name: Install mc
+      yum: name=mc state=latest
+      
+    - name: Install tcpdump
+      yum: name=tcpdump state=latest
+            
+    - name: Remove and mask service firewalld
+      service:
+        name: firewalld
+        enabled: no
+        state: stopped      
+        masked: yes
+
+    - name: Install iptables
+      yum: name=iptables-services state=latest
+      
+    - name: enable  routing
+      shell: sysctl net.ipv4.ip_forward=1  
+      
+    - name: enable  routing      
+      shell: echo "net.ipv4.ip_forw ard = 1" >> /etc/sysctl.conf 
+  
+    - name: copy route      
+      copy: src=/ansible/VPS/route-gre1 dest=/etc/sysconfig/network-scripts/  
+
+    - name: copy ifcfg-gre1      
+      copy: src=/ansible/VPS/ifcfg-gre1 dest=/etc/sysconfig/network-scripts/  
+   
+    - name: copy iptables      
+      copy: src=/ansible/VPS/iptables dest=/etc/sysconfig/
+      
+    - name: Enable iptables
+      service:
+        name: iptables
+        enabled: yes
+        state: started
+        
+#PEER_INNER_IPADDR to ifcfg-gre1  
+    - lineinfile:
+        path: /etc/sysconfig/network-scripts/ifcfg-gre1
+        line: "PEER_INNER_IPADDR={{ PEER_INNER_IPADDR }}"
+        
+#MY_INNER_IPADDR to ifcfg-gre1
+    - lineinfile:
+        path: /etc/sysconfig/network-scripts/ifcfg-gre1
+        line: "MY_INNER_IPADDR={{ MY_INNER_IPADDR }}"
