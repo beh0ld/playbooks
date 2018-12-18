@@ -49,13 +49,13 @@
       shell: echo "net.ipv4.ip_forw ard = 1" >> /etc/sysctl.conf 
   
     - name: copy route      
-      copy: src=/ansible/VPS/route-gre1 dest=/etc/sysconfig/network-scripts/  
+      copy: src=./VPS/route-gre1 dest=/etc/sysconfig/network-scripts/  
 
     - name: copy ifcfg-gre1      
-      copy: src=/ansible/VPS/ifcfg-gre1 dest=/etc/sysconfig/network-scripts/  
+      copy: src=./VPS/ifcfg-gre1 dest=/etc/sysconfig/network-scripts/  
    
     - name: copy iptables      
-      copy: src=/ansible/VPS/iptables dest=/etc/sysconfig/
+      copy: src=./VPS/iptables dest=/etc/sysconfig/
       
     - name: Enable iptables
       service:
