@@ -46,7 +46,7 @@
       shell: sysctl net.ipv4.ip_forward=1  
       
     - name: enable  routing      
-      shell: echo "net.ipv4.ip_forw ard = 1" >> /etc/sysctl.conf 
+      shell: echo "net.ipv4.ip_forward = 1" >> /etc/sysctl.conf 
   
     - name: copy route      
       copy: src=./VPS/route-gre1 dest=/etc/sysconfig/network-scripts/  
@@ -72,3 +72,9 @@
     - lineinfile:
         path: /etc/sysconfig/network-scripts/ifcfg-gre1
         line: "MY_INNER_IPADDR={{ MY_INNER_IPADDR }}"
+        
+    - name: Restart network
+      service:
+        name: network
+        enabled: yes
+        state: restarted
