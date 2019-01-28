@@ -17,7 +17,7 @@
        - iptables
        - iptables-services
        - tree
-       - locate
+       - mlocate
     
    - block:                 #enable stuff
      - name: Enable services
@@ -44,7 +44,6 @@
        copy: src=./VPS/{{ item }} dest=/etc/sysconfig/network-scripts/  
        loop:
        - route-gre1
-       - ifcfg-gre1
   
      - name: copy iptables      
        copy: src=./VPS/iptables dest=/etc/sysconfig/
@@ -55,16 +54,9 @@
          enabled: yes
          state: started
          
-           #PR_INNER_IPADDR to ifcfg-gre1  
-     - lineinfile:
-         path: /etc/sysconfig/network-scripts/ifcfg-gre1
-         line: "PEER_INNER_IPADDR={{ PEER_INNER_IPADDR }}"
-         
-           #MINNER_IPADDR to ifcfg-gre1
-     - lineinfile:
-         path: /etc/sysconfig/network-scripts/ifcfg-gre1
-         line: "MY_INNER_IPADDR={{ MY_INNER_IPADDR }}"
-         
+     - name: Generate  ifcfg-gre1
+       template: src=./VPS/ifcfg-gre1.j2 dest=/etc/sysconfig/network-scripts/ifcfg-gre1
+
      - name: Restart network
        service:
          name: network
