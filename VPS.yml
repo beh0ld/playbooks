@@ -26,25 +26,14 @@
        - nginx
        - proftpd
      
-   - block:                 #network setup
+   - block:                 #iptables
      - name: Remove and mask service firewalld
        service:
         name: firewalld
         enabled: no
         state: stopped      
         masked: yes
-  
-     - name: enable  routing
-       shell: sysctl net.ipv4.ip_forward=1  
-       
-     - name: enable  routing      
-       shell: echo "net.ipv4.ip_forward = 1" >> /etc/sysctl.conf 
-     
-     - name: copy route      
-       copy: src=./VPS/{{ item }} dest=/etc/sysconfig/network-scripts/  
-       loop:
-       - route-gre1
-  
+        
      - name: copy iptables      
        copy: src=./VPS/iptables dest=/etc/sysconfig/
        
@@ -54,6 +43,16 @@
          enabled: yes
          state: started
          
+   - block:                 #network       
+     - name: enable  routing
+       shell: sysctl net.ipv4.ip_forward=1  
+       
+     - name: enable  routing      
+       shell: echo "net.ipv4.ip_forward = 1" >> /etc/sysctl.conf 
+     
+     - name: copy route      
+       copy: src=./VPS/route-gre1 dest=/etc/sysconfig/network-scripts/  
+       
      - name: Generate  ifcfg-gre1
        template: src=./VPS/ifcfg-gre1.j2 dest=/etc/sysconfig/network-scripts/ifcfg-gre1
 
