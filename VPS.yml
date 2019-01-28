@@ -55,9 +55,8 @@
        
      - name: Generate  ifcfg-gre1
        template: src=./VPS/ifcfg-gre1.j2 dest=/etc/sysconfig/network-scripts/ifcfg-gre1
-
-     - name: Restart network
-       service:
-         name: network
-         enabled: yes
-         state: restarted
+       notify: Restart network
+       
+  handlers:
+  - name:  Restart network
+    service: name=network state=restarted
