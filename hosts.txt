@@ -1,0 +1,63 @@
+[srx210_12.1]
+10.0.12.254 hostname=JR-CHF1
+10.0.19.254 hostname=JR-CHP15
+10.0.13.254 hostname=JR1-KS73
+10.0.25.254 hostname=JR1-SAE4
+10.0.33.254 hostname=JR1-SPS7
+10.0.26.254 hostname=JR1-TLO5
+10.0.14.254 hostname=JR1-UFT2
+10.25.6.254 hostname=JR1-MSFO
+
+[srx210_12.3]
+10.0.17.254 hostname=JR1-IK49
+10.0.40.254 hostname=JR1-MGE4
+10.0.38.254 hostname=JR1-TUM2
+10.0.39.254 hostname=JR1-KZR8
+10.0.37.254 hostname=JR1-SA12
+10.0.15.254 hostname=JR1-NCH3
+10.0.7.254 hostname=JR1-NNK6
+10.0.24.254 hostname=JR1-OS13
+10.0.23.254 hostname=JR1-PES4
+10.0.16.254 hostname=JR1-PRM1
+10.0.21.254 hostname=JR1-SAS5
+10.0.9.254  hostname=JR1-SMS1
+10.0.18.254 hostname=JR1-ULM9
+10.0.8.254 hostname=JR1-SPT2
+10.0.6.254 hostname=JR1-MSFS
+10.0.28.254 hostname=JR1-EBP2
+10.0.29.254 hostname=JR1-MP10
+10.0.22.254 hostname=JR1-SK44
+10.0.30.254 hostname=JR1-STP7
+10.0.31.254 hostname=JR1-VK74
+10.0.32.254 hostname=JR1-VLK4
+10.0.35.254 hostname=JR1-IV15
+10.0.27.254 hostname=JR1-YOS9
+10.0.34.254 hostname=JR1-SPE5
+
+[srx100_12.1]
+10.0.20.63 hostname=JR1-NP32
+10.25.5.1 hostname=JR1-NNB5
+10.0.36.254 hostname=JR1-NNS7
+10.0.11.254 hostname=JR1-NNPL
+
+[alljuniper:children]
+srx100_12.1
+srx210_12.1
+srx210_12.3
+
+[alljuniper:vars]
+ansible_jun_username=root
+ansible_jun_port=22
+ansible_jun_timeout=60
+ansible_ssh_private_key_file=./key/Identity
+
+
+
+#############################################################NEW VPN FOR BUH WITH TINC OVER VPS###############################################################################################################
+[new_VPS]
+XXX            ansible_host=0.0.0.0  ansible_ssh_pass=xxx   MY_INNER_IPADDR=10.100.150.17 USER_IPADDR=10.100.101.4  NAME=XXX
+
+[new_VPS_tinc]
+XXX             ansible_host=10.0.1.10       ansible_ssh_pass=XXX    VPS_IP=0.0.0.0 USER_IPADDR=0.0.0.0 NETWORK=0.0.0.0 VPS_LOCAL_IP=0.0.0.0 NAME=TEST RT_NUMBER=18
+###############################################################################################################################################################################################################
+[new_iptables]
