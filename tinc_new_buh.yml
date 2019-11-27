@@ -1,0 +1,39 @@
+---
+- name: New Tinc service deploy
+  hosts: new_VPS_tinc
+  become: no
+
+
+  tasks:
+
+   - block:                 #BUH Server configuration
+     - name: Add accel secret
+       lineinfile:
+         path: /etc/accel-ppp.chap-secrets
+         line: IPIP-{{ NAME }}                    *   KiatuG0B   {{ USER_IPADDR }}
+
+     - name: Add tinc connect
+       lineinfile:
+         path: /etc/tinc/VPS/tinc.conf
+         line: ConnectTo     = {{ NAME }}
+
+     - name: Add rt_tables
+       lineinfile:
+         path: /etc/iproute2/rt_tables
+         line: "{{ RT_NUMBER }} {{ NAME }}"
+
+     - name: Add tinc routing
+       blockinfile:
+          path: /etc/tinc/VPS/tinc-up
+          block: |
+                 # VPS {{ NAME }}
+                 ip route add 10.0.0.0/22               dev eth0       table {{ NAME }}
+                 ip route add default via {{ VPS_LOCAL_IP }} dev $INTERFACE table {{ NAME }}
+                 up ip rule  add from {{ NETWORK }}  lookup {{ NAME }}
+
+     - name: Generate tinc host conf
+       template: src=./tinc/NAME_tinc.j2 dest=/etc/tinc/VPS/hosts/{{NAME}}
+
+   - block:                 #restart
+     - name: Restart
+       reboot:

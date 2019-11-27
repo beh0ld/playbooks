@@ -1,0 +1,4 @@
+DEVICE=tap0
+BOOTPROTO=none
+ONBOOT=yes
+TYPE=Tap

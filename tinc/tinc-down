@@ -1,0 +1,5 @@
+#!/bin/bash
+
+ip link set $INTERFACE down
+ip addr del {{MY_INNER_IPADDR}}/24 dev $INTERFACE
+ip route del 10.100.101.0/24 dev $INTERFACE

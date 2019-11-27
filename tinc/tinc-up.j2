@@ -1,0 +1,5 @@
+#!/bin/bash
+
+ip link set $INTERFACE up
+ip addr add {{MY_INNER_IPADDR}}/24 dev $INTERFACE
+ip route add 10.100.101.0/24 via 10.100.150.1 dev $INTERFACE

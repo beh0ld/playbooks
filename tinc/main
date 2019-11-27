@@ -1,0 +1,7 @@
+#SubNet      = 10.200.200.1/32
+Compression = 9
+
+-----BEGIN RSA PUBLIC KEY-----
+MEgCQQDW1cuk0xuIcimT92nqN8dXbn1Jkwouv3272w6UrasWRpjsP3FIh3qCSqJrsn
+t25+h250QxHBqaCdbXnO6T9wBI+dAgMBAAE=
+-----END RSA PUBLIC KEY-----
