@@ -1,0 +1,45 @@
+---
+- name: juniper initialization playbook #Playbook Name
+  hosts: Hubs Filials #target hosts
+#eneable junos module
+  roles:
+  - Juniper.junos
+  connection: local
+  gather_facts: no
+#new var "credentionales for Netconf over SSH connection"
+  vars_prompt:
+    - name: "DEVICE_USERNAME"
+      promt: "Device username"
+      private: no
+    - name: "DEVICE_PASSWORD"
+      promt: "Device password"
+      private: yes
+#declare connection var
+  vars:
+    provider_info:
+      host: "{{ inventory_hostname }}"
+      username: "{{ DEVICE_USERNAME }}"
+      password: "{{ DEVICE_PASSWORD }}"
+      port: "{{ ansible_jun_port }}"
+      timeout: "{{ ansible_jun_timeout }}"
+#TASKS
+  tasks:
+#check connection
+  - name: junos check connection
+    wait_for:
+      host: "{{ inventory_hostname }}"
+      port: "{{ ansible_jun_port }}"
+      timeout: 10
+#create dir
+  - name: "Create version directory"
+    file:
+      path: /ansible_junos/Configs_for_diff/{{ item }}
+      state: directory
+    with_items: "{{ version }}"
+#get full conf
+  - name: "Get committed configuration"
+    juniper_junos_config:
+        provider: "{{ provider_info }}"
+        retrieve: "committed"
+        format: "text"
+        dest: "./Configs_for_diff/{{ version }}/{{ hostname }}"
