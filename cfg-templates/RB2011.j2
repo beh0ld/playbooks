@@ -21,23 +21,23 @@ add name=mactel
 add name=mac-winbox
 /interface wireless security-profiles
 set [ find default=yes ] authentication-types=wpa2-eap eap-methods=eap-tls group-ciphers=tkip mode=dynamic-keys radius-mac-authentication=yes radius-mac-format=XX-XX-XX-XX-XX-XX supplicant-identity=10.200.{{IP_OCTET}}.1 tls-mode=verify-certificate unicast-ciphers=tkip
-add authentication-types=wpa2-psk eap-methods="" group-ciphers=tkip,aes-ccm management-protection=allowed mode=dynamic-keys name=Partkom-TSD radius-mac-format=XXXXXXXXXXXX supplicant-identity="" unicast-ciphers=tkip,aes-ccm wpa2-pre-shared-key=XXXX
-add authentication-types=wpa2-eap group-ciphers=tkip management-protection=allowed mode=dynamic-keys name=PARTKOM supplicant-identity=MK1-TEST unicast-ciphers=tkip
+add authentication-types=wpa2-psk eap-methods="" group-ciphers=tkip,aes-ccm management-protection=allowed mode=dynamic-keys name=XXX radius-mac-format=XXXXXXXXXXXX supplicant-identity="" unicast-ciphers=tkip,aes-ccm wpa2-pre-shared-key=XXXX
+add authentication-types=wpa2-eap group-ciphers=tkip management-protection=allowed mode=dynamic-keys name=xxx supplicant-identity=MK1-TEST unicast-ciphers=tkip
 /interface wireless
-set [ find default-name=wlan1 ] band=2ghz-b/g/n comment=WIFI disabled=no hide-ssid=yes mode=ap-bridge security-profile=Partkom-TSD ssid=Partkom-TSD wireless-protocol=802.11 wps-mode=disabled
+set [ find default-name=wlan1 ] band=2ghz-b/g/n comment=WIFI disabled=no hide-ssid=yes mode=ap-bridge security-profile=XXX ssid=XXX wireless-protocol=802.11 wps-mode=disabled
 /interface wireless manual-tx-power-table
 set wlan1 comment=WIFI
 /interface wireless nstreme
 set wlan1 comment=WIFI
 /interface wireless
-add disabled=no hide-ssid=yes keepalive-frames=disabled mac-address=CE:2D:E0:E8:28:C9 master-interface=wlan1 multicast-buffering=disabled name=PARTKOM security-profile=PARTKOM ssid=PARTKOM wds-cost-range=0 wds-default-cost=0 wps-mode=disabled
+add disabled=no hide-ssid=yes keepalive-frames=disabled mac-address=CE:2D:E0:E8:28:C9 master-interface=wlan1 multicast-buffering=disabled name=xxx security-profile=xxx ssid=xxx wds-cost-range=0 wds-default-cost=0 wps-mode=disabled
 /ip hotspot profile
 set [ find default=yes ] html-directory=flash/hotspot
 /ip ipsec profile
 add dh-group=modp4096,modp2048,modp1024 dpd-interval=30s dpd-maximum-failures=3 hash-algorithm=md5 lifetime=8h name=NDC2
 add dh-group=modp8192,modp4096,modp2048,modp1024 dpd-interval=disable-dpd hash-algorithm=md5 lifetime=8h name=HWR1
 /ip ipsec peer
-add address=95.79.59.14/32 name=NDC2 profile=NDC2
+add address=99.99.99.99/32 name=NDC2 profile=NDC2
 add address=99.99.99.99/32 name=HWR1 profile=HWR1
 /ip ipsec proposal
 add auth-algorithms=md5 enc-algorithms=3des name=TO-NDC2 pfs-group=none
@@ -52,7 +52,7 @@ add area-id=0.0.0.51 name=AREA51
 /routing ospf instance
 set [ find default=yes ] redistribute-connected=as-type-2 router-id=10.200.{{IP_OCTET}}.254
 /snmp community
-set [ find default=yes ] addresses=10.0.0.0/22,192.168.25.254/32,10.0.0.27/32,192.168.25.27/32 name=partkomsnmp
+set [ find default=yes ] addresses=10.0.0.0/22,192.168.25.254/32,10.0.0.27/32,192.168.25.27/32 name=xxxsnmp
 /system logging action
 set 0 memory-lines=1
 set 1 disk-file-count=5
@@ -66,7 +66,7 @@ add bridge=Local_bridge interface=ether5
 add bridge=Local_bridge interface=ether6
 add bridge=Local_bridge interface=ether7
 add bridge=Local_bridge interface=ether8
-add bridge=Local_bridge interface=PARTKOM
+add bridge=Local_bridge interface=xxx
 add bridge=Local_bridge interface=wlan1
 add bridge=ISP_bridge interface=ether10
 /ip neighbor discovery-settings
@@ -83,7 +83,7 @@ add address={{TUN_HWR1_IP}}/30 interface=GRE-TO-HWR1 network={{TUN_HWR1_NETWORK}
 /ip cloud
 set update-time=no
 /ip dhcp-server network
-add address=10.200.{{IP_OCTET}}.0/24 dns-server=10.0.0.3,10.0.1.23 domain=partkom.local gateway=10.200.{{IP_OCTET}}.1 netmask=24
+add address=10.200.{{IP_OCTET}}.0/24 dns-server=10.0.0.3,10.0.1.23 domain=xxx.local gateway=10.200.{{IP_OCTET}}.1 netmask=24
 /ip dns
 set servers=10.0.0.3,10.0.1.23
 /ip firewall address-list

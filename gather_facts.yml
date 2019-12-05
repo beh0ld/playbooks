@@ -6,13 +6,12 @@
 
   vars:
    message1 : public
-   message2 : GRE
-
+   message2 : tinc
   tasks:
   - shell    : uptime
     register : uptime
-    
-  - set_fact : full_message="{{ message1 }},{{ message2 }} --- {{ ansible_all_ipv4_addresses }} --- {{ uptime.stdout_lines }}"
 
-  - debug   : 
+  - set_fact : full_message="{{ message1 }}, {{message2}} --- {{ ansible_all_ipv4_addresses }} --- {{ uptime.stdout_lines }}"
+
+  - debug   :
       var   : full_message

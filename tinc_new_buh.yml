@@ -10,7 +10,7 @@
      - name: Add accel secret
        lineinfile:
          path: /etc/accel-ppp.chap-secrets
-         line: IPIP-{{ NAME }}                    *   KiatuG0B   {{ USER_IPADDR }}
+         line: IPIP-{{ NAME }}                    *   XXX   {{ USER_IPADDR }}
 
      - name: Add tinc connect
        lineinfile:
