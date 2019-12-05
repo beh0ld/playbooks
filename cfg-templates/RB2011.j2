@@ -1,0 +1,262 @@
+/interface bridge
+add comment="ISP-{{FILIAL_NAME}}" fast-forward=no name=ISP_bridge protocol-mode=none
+add comment=LAN fast-forward=no name=Local_bridge protocol-mode=none
+add comment=LOOPBACK-MNGT fast-forward=no name=lo_mngt
+/interface ethernet
+set [ find default-name=ether2 ] disabled=yes
+set [ find default-name=ether3 ] disabled=yes
+set [ find default-name=ether4 ] disabled=yes
+set [ find default-name=ether5 ] disabled=yes
+set [ find default-name=ether6 ] disabled=yes
+set [ find default-name=ether7 ] disabled=yes
+set [ find default-name=ether8 ] disabled=yes
+set [ find default-name=ether9 ] disabled=yes
+set [ find default-name=sfp1 ] disabled=yes
+/interface gre
+add comment=GRE-TO-HWR1 !keepalive local-address={{ISP_IP}} mtu=1280 name=GRE-TO-HWR1 remote-address=99.99.99.99
+add comment=GRE-TO-NDC2 !keepalive local-address=10.200.{{IP_OCTET}}.254 mtu=1280 name=GRE-TO-NDC2 remote-address=10.25.0.254
+/interface list
+add exclude=dynamic name=discover
+add name=mactel
+add name=mac-winbox
+/interface wireless security-profiles
+set [ find default=yes ] authentication-types=wpa2-eap eap-methods=eap-tls group-ciphers=tkip mode=dynamic-keys radius-mac-authentication=yes radius-mac-format=XX-XX-XX-XX-XX-XX supplicant-identity=10.200.{{IP_OCTET}}.1 tls-mode=verify-certificate unicast-ciphers=tkip
+add authentication-types=wpa2-psk eap-methods="" group-ciphers=tkip,aes-ccm management-protection=allowed mode=dynamic-keys name=Partkom-TSD radius-mac-format=XXXXXXXXXXXX supplicant-identity="" unicast-ciphers=tkip,aes-ccm wpa2-pre-shared-key=XXXX
+add authentication-types=wpa2-eap group-ciphers=tkip management-protection=allowed mode=dynamic-keys name=PARTKOM supplicant-identity=MK1-TEST unicast-ciphers=tkip
+/interface wireless
+set [ find default-name=wlan1 ] band=2ghz-b/g/n comment=WIFI disabled=no hide-ssid=yes mode=ap-bridge security-profile=Partkom-TSD ssid=Partkom-TSD wireless-protocol=802.11 wps-mode=disabled
+/interface wireless manual-tx-power-table
+set wlan1 comment=WIFI
+/interface wireless nstreme
+set wlan1 comment=WIFI
+/interface wireless
+add disabled=no hide-ssid=yes keepalive-frames=disabled mac-address=CE:2D:E0:E8:28:C9 master-interface=wlan1 multicast-buffering=disabled name=PARTKOM security-profile=PARTKOM ssid=PARTKOM wds-cost-range=0 wds-default-cost=0 wps-mode=disabled
+/ip hotspot profile
+set [ find default=yes ] html-directory=flash/hotspot
+/ip ipsec profile
+add dh-group=modp4096,modp2048,modp1024 dpd-interval=30s dpd-maximum-failures=3 hash-algorithm=md5 lifetime=8h name=NDC2
+add dh-group=modp8192,modp4096,modp2048,modp1024 dpd-interval=disable-dpd hash-algorithm=md5 lifetime=8h name=HWR1
+/ip ipsec peer
+add address=95.79.59.14/32 name=NDC2 profile=NDC2
+add address=99.99.99.99/32 name=HWR1 profile=HWR1
+/ip ipsec proposal
+add auth-algorithms=md5 enc-algorithms=3des name=TO-NDC2 pfs-group=none
+add auth-algorithms=md5 enc-algorithms=3des name=TO-HWR1 pfs-group=none
+/ip pool
+add name=dhcp_local ranges=10.200.{{IP_OCTET}}.100-10.200.{{IP_OCTET}}.200
+/ip dhcp-server
+add address-pool=dhcp_local disabled=no interface=Local_bridge lease-time=8h name=dhcp_local
+/routing ospf area
+set [ find default=yes ] disabled=yes
+add area-id=0.0.0.51 name=AREA51
+/routing ospf instance
+set [ find default=yes ] redistribute-connected=as-type-2 router-id=10.200.{{IP_OCTET}}.254
+/snmp community
+set [ find default=yes ] addresses=10.0.0.0/22,192.168.25.254/32,10.0.0.27/32,192.168.25.27/32 name=partkomsnmp
+/system logging action
+set 0 memory-lines=1
+set 1 disk-file-count=5
+add name=syslog remote=10.0.2.2 src-address=10.200.{{IP_OCTET}}.1 target=remote
+/interface bridge port
+add bridge=Local_bridge interface=ether1
+add bridge=Local_bridge interface=ether2
+add bridge=Local_bridge interface=ether3
+add bridge=Local_bridge interface=ether4
+add bridge=Local_bridge interface=ether5
+add bridge=Local_bridge interface=ether6
+add bridge=Local_bridge interface=ether7
+add bridge=Local_bridge interface=ether8
+add bridge=Local_bridge interface=PARTKOM
+add bridge=Local_bridge interface=wlan1
+add bridge=ISP_bridge interface=ether10
+/ip neighbor discovery-settings
+set discover-interface-list=discover
+/interface list member
+add interface=GRE-TO-NDC2 list=discover
+add interface=GRE-TO-HWR1 list=discover
+/ip address
+add address={{ISP_IP}}/{{ISP_PREFIX}} interface=ISP_bridge network={{ISP_NETWORK}}
+add address=10.200.{{IP_OCTET}}.254 interface=lo_mngt network=10.200.{{IP_OCTET}}.254
+add address=10.200.{{IP_OCTET}}.1/24 interface=Local_bridge network=10.200.{{IP_OCTET}}.0
+add address={{TUN_NDC2_IP}}/30 interface=GRE-TO-NDC2 network={{TUN_NDC2_NETWORK}}
+add address={{TUN_HWR1_IP}}/30 interface=GRE-TO-HWR1 network={{TUN_HWR1_NETWORK}}
+/ip cloud
+set update-time=no
+/ip dhcp-server network
+add address=10.200.{{IP_OCTET}}.0/24 dns-server=10.0.0.3,10.0.1.23 domain=partkom.local gateway=10.200.{{IP_OCTET}}.1 netmask=24
+/ip dns
+set servers=10.0.0.3,10.0.1.23
+/ip firewall address-list
+add address=10.0.0.1 list=G_DNS-SERVERS
+add address=10.0.0.3 list=G_DNS-SERVERS
+add address=10.0.1.23 list=G_DNS-SERVERS
+add address=10.0.7.10 list=G_DNS-SERVERS
+add address=10.0.7.13 list=G_DNS-SERVERS
+add address=10.0.6.4 list=G_DNS-SERVERS
+add address=10.0.9.1 list=G_DNS-SERVERS
+add address=10.0.8.22 list=G_DNS-SERVERS
+add address=10.0.12.1 list=G_DNS-SERVERS
+add address=10.0.1.29 list=G_DNS-SERVERS
+add address=10.0.0.40 list=G_TERMINAL_SERVERS
+add address=10.0.0.46 list=G_TERMINAL_SERVERS
+add address=10.0.0.47 list=G_TERMINAL_SERVERS
+add address=10.0.0.58 list=G_TERMINAL_SERVERS
+add address=10.0.0.59 list=G_TERMINAL_SERVERS
+add address=10.0.0.204 list=G_TERMINAL_SERVERS
+add address=10.0.0.126 list=G_TERMINAL_SERVERS
+add address=10.0.1.8 list=G_TERMINAL_SERVERS
+add address=10.0.1.32 list=G_TERMINAL_SERVERS
+add address=10.0.1.31 list=G_TERMINAL_SERVERS
+add address=10.0.0.248 list=G_TERMINAL_SERVERS
+add address=10.0.1.30 list=G_TERMINAL_SERVERS
+add address=10.0.0.33 list=G_TERMINAL_SERVERS
+add address=10.0.0.254 list=G_TERMINAL_SERVERS
+add address=10.0.1.20 list=G_TERMINAL_SERVERS
+add address=10.0.0.20 list=G_WEB_SERVICES
+add address=10.0.0.55 list=G_WEB_SERVICES
+add address=10.0.0.15 list=G_WEB_SERVICES
+add address=10.0.0.235 list=G_WEB_SERVICES
+add address=10.0.1.29 list=G_WEB_SERVICES
+add address=10.0.0.64 list=G_FS-SERVERS
+add address=10.0.0.37 list=G_FS-SERVERS
+add address=99.99.99.99/29 list=G_ALLOW_MNGT
+add address=10.0.2.0/29 list=G_ALLOW_MNGT
+add address=172.16.10.100 list=G_WEB_SERVICES
+add address=172.16.12.0/24 list=NOT_NAT
+add address=10.0.0.0/8 list=NOT_NAT
+add address=10.0.0.39 list=G_ALLOW_MNGT
+add address=10.0.0.20 list=G_ALLOW_MNGT
+add address=192.168.25.254 list=G_ALLOW_MNGT
+add address=10.0.2.2 list=G_ALLOW_MNGT
+add address=10.33.0.0/24 list=G_ALLOW_MNGT
+add address=10.0.1.26 list=G_ALLOW_MNGT
+add address=10.0.1.109 list=G_TERMINAL_SERVERS
+add address=10.0.1.110 list=G_TERMINAL_SERVERS
+add address=10.0.1.111 list=G_TERMINAL_SERVERS
+add address=10.0.1.112 list=G_TERMINAL_SERVERS
+add address=10.0.1.91 list=G_TERMINAL_SERVERS
+add address=10.0.1.87 list=G_TERMINAL_SERVERS
+add address=10.0.1.92 list=G_TERMINAL_SERVERS
+add address=10.0.1.86 list=G_TERMINAL_SERVERS
+add address=10.0.1.60 list=G_WEB_SERVICES
+add address=10.0.1.107 list=G_WEB_SERVICES
+add address=10.200.{{IP_OCTET}}.0/24 list=LAN
+add address=10.0.1.114 list=G_TERMINAL_SERVERS
+add address=10.0.2.14 list=G_ALLOW_MNGT
+add address=10.0.0.91 list=G_DNS-SERVERS
+add address=10.0.0.54 list=G_DNS-SERVERS
+add address=10.0.0.27 list=G_ALLOW_MNGT
+add address=172.16.10.100 list=NOT_NAT
+add address=10.51.0.0/24 list=G_ALLOW_MNGT
+add address=10.0.0.102 list=G_TERMINAL_SERVERS
+add address=10.0.0.103 list=G_TERMINAL_SERVERS
+add address=10.0.0.55 list=G_DNS-SERVERS
+add address=10.0.0.0/8 list=G_ALLOW-CONNECT-TO-USER
+add address=10.0.1.140 list=G_TERMINAL_SERVERS
+add address=10.0.1.142 list=G_TERMINAL_SERVERS
+/ip firewall filter
+add action=drop chain=output comment="For 4G Backup Enable" dst-address=8.8.4.4 out-interface=ISP_bridge protocol=icmp
+add action=accept chain=input comment="Allow ping for all" protocol=icmp src-address-list=G_ALLOW_MNGT
+add action=accept chain=output dst-address-list=G_ALLOW_MNGT protocol=icmp
+add action=accept chain=input comment="Allow input/out trafic(established, related) and drop invalid" connection-state=established,related,untracked
+add action=accept chain=output
+add action=drop chain=input connection-state=invalid
+add action=accept chain=input comment="Allow IPSEC | GRE | OSPF " protocol=gre
+add action=accept chain=input protocol=ipsec-esp
+add action=accept chain=input dst-port=500 protocol=udp
+add action=accept chain=input dst-port=1701 protocol=udp
+add action=accept chain=input dst-port=4500 protocol=udp
+add action=accept chain=input in-interface=GRE-TO-NDC2 protocol=ospf
+add action=accept chain=input in-interface=GRE-TO-HWR1 protocol=ospf
+add action=accept chain=input comment=MNGT dst-port=8291 protocol=tcp src-address-list=G_ALLOW_MNGT
+add action=accept chain=input dst-port=22 protocol=tcp src-address-list=G_ALLOW_MNGT
+add action=accept chain=input dst-port=161 protocol=udp src-address=10.0.0.0/22
+add action=accept chain=input comment=DHCP in-interface=Local_bridge protocol=udp
+add action=jump chain=forward comment="to chain IPSEC" dst-address=10.0.0.0/8 jump-target=IPSEC_ALLOW
+add action=jump chain=forward dst-address=172.16.10.100 jump-target=IPSEC_ALLOW
+add action=accept chain=IPSEC_ALLOW dst-address-list=G_DNS-SERVERS protocol=tcp
+add action=accept chain=IPSEC_ALLOW dst-address-list=G_DNS-SERVERS protocol=udp
+add action=accept chain=IPSEC_ALLOW dst-address-list=G_TERMINAL_SERVERS dst-port=3389 protocol=tcp
+add action=accept chain=IPSEC_ALLOW dst-address-list=G_WEB_SERVICES dst-port=80 protocol=tcp
+add action=accept chain=IPSEC_ALLOW dst-address-list=G_WEB_SERVICES dst-port=443 protocol=tcp
+add action=accept chain=IPSEC_ALLOW protocol=icmp
+add action=accept chain=IPSEC_ALLOW dst-address=10.0.0.64 protocol=tcp
+add action=accept chain=IPSEC_ALLOW dst-address=10.40.0.0/24
+add action=accept chain=IPSEC_ALLOW dst-address=10.0.0.63
+add action=accept chain=IPSEC_ALLOW dst-address-list=G_ALLOW-CONNECT-TO-USER
+add action=drop chain=IPSEC_ALLOW log=yes log-prefix=DROP_TOIPSEC
+add action=jump chain=forward comment=INTERNET dst-address-list=!NOT_NAT jump-target=INET_ALLOW
+add action=accept chain=INET_ALLOW
+add action=drop chain=INET_ALLOW
+add action=fasttrack-connection chain=forward comment="defconf: fasttrack" connection-state=established,related,untracked
+add action=drop chain=input comment="defconf: drop all from WAN" in-interface=ISP_bridge log=yes log-prefix=DROP_INPUT_ISP
+add action=drop chain=forward comment="DROP ALL" connection-state=invalid
+add action=drop chain=input log=yes log-prefix=DROP_INPUT
+/ip firewall nat
+add action=masquerade chain=srcnat comment="defconf: masquerade" dst-address-list=!NOT_NAT
+/ip ipsec identity
+add peer=NDC2 secret=xxxx
+add peer=HWR1 secret=xxxx
+/ip ipsec policy
+add dst-address=10.25.0.254/32 peer=NDC2 proposal=TO-NDC2 sa-dst-address=99.99.99.99 sa-src-address=0.0.0.0 src-address=10.200.{{IP_OCTET}}.254/32 tunnel=yes
+add dst-address=99.99.99.99/32 peer=HWR1 proposal=TO-HWR1 protocol=gre sa-dst-address=99.99.99.99 sa-src-address={{ISP_IP}} src-address={{ISP_IP}}/32 tunnel=yes
+/ip route
+add comment=ISP1 distance=2 gateway={{ISP_GW}}
+add check-gateway=ping comment=GOOGLE distance=1 dst-address=8.8.4.4/32 gateway={{ISP_GW}}
+/ip route rule
+add action=drop disabled=yes dst-address=10.33.0.0/24
+/ip service
+set telnet disabled=yes
+set ftp disabled=yes
+set www disabled=yes
+set ssh address="10.33.0.0/24,10.0.0.0/22,5.164.192.0/18,5.166.192.0/19,10.0.2.0/29,10.0.2.14/32,10.0.6.0/25,10.0.7.0/25"
+set api disabled=yes
+set winbox address="10.33.0.0/24,10.0.0.0/22,5.164.192.0/18,5.166.192.0/19,10.0.2.0/29,10.0.2.14/32,10.0.6.0/25,10.0.7.0/25"
+set api-ssl disabled=yes
+/radius
+add address=10.0.0.54 secret=XXX service=wireless src-address=10.200.{{IP_OCTET}}.1
+add address=10.0.0.91 secret=XXX service=wireless src-address=10.200.{{IP_OCTET}}.1
+add address=10.0.0.91 secret=XXX service=login src-address=10.200.{{IP_OCTET}}.1
+add address=10.0.0.54 secret=XXX service=login src-address=10.200.{{IP_OCTET}}.1
+/routing filter
+add action=accept chain=ospf-out prefix=10.200.{{IP_OCTET}}.0/24
+add action=accept chain=ospf-out prefix=10.200.{{IP_OCTET}}.254
+add action=discard chain=ospf-out prefix={{ISP_IP}}/{{ISP_PREFIX}}
+add action=accept chain=ospf-in prefix=10.25.1.0/24
+add action=discard chain=ospf-in prefix=10.25.0.0/16 prefix-length=0-128
+add action=discard chain=ospf-in prefix=10.35.0.0/16 prefix-length=0-128
+add action=discard chain=ospf-in prefix=10.55.0.0/16 prefix-length=0-128
+add action=discard chain=ospf-in prefix=10.91.0.0/16 prefix-length=0-128
+add action=discard chain=ospf-in prefix=1.1.1.1
+add action=discard chain=ospf-in prefix=10.0.5.0 prefix-length=0-128
+add action=discard chain=ospf-in prefix=10.0.5.0 prefix-length=0-128
+add action=discard chain=ospf-in prefix=0.0.0.0 prefix-length=0
+/routing ospf interface
+add interface=Local_bridge passive=yes
+add interface=lo_mngt passive=yes
+add cost=300 dead-interval=10s hello-interval=5s interface=GRE-TO-NDC2 network-type=point-to-point retransmit-interval=10s
+add dead-interval=10s hello-interval=5s interface=GRE-TO-HWR1 network-type=point-to-point retransmit-interval=10s
+/routing ospf network
+add area=AREA51 network=172.16.12.0/24
+add area=AREA51 network=10.201.0.0/24
+/snmp
+set enabled=yes location=TEST trap-generators=start-trap trap-target=192.168.25.254 trap-version=2
+/system clock
+set time-zone-name=Asia/Yekaterinburg
+/system identity
+set name=MK1-{{FILIAL_NAME}}
+/system logging
+set 0 topics=warning
+set 1 action=syslog
+set 2 action=syslog
+set 3 action=syslog
+add action=syslog topics=radius
+add action=syslog topics=firewall
+/system ntp client
+set enabled=yes primary-ntp=10.0.0.3 secondary-ntp=10.0.1.23
+/system routerboard settings
+set silent-boot=no
+/tool netwatch
+add down-script=" /ip route enable [find comment=\"ISP1\"]" host=8.8.4.4 interval=5s up-script=" /ip route disable [find comment=\"ISP1\"]"
+/user aaa
+set default-group=full use-radius=yes

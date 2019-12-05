@@ -1,0 +1,62 @@
+---
+- name: mikrotik zeroday RB2011 #Playbook Name
+  hosts: deploy #target hosts
+  gather_facts: false
+  vars_prompt:
+    - name: "IP_FOR_SSH"
+      prompt: "Enter IP for first SSH session"
+      default: "10.0.2.51"
+      private: no
+    - name: "FILIAL_NAME"
+      prompt: "Enter filial short name, like EKT5"
+      private: no
+    - name: "IP_OCTET"
+      prompt: "Enter ? in 10.200.(?).0, just intger"
+      private: no
+    - name: "TUN_NDC2_IP"
+      prompt: "Enter tunnel to HWR1 ip, like 172.16.12.2"
+      private: no
+    - name: "TUN_NDC2_NETWORK"
+      prompt: "Enter tunnel to HWR1 network, like 172.16.12.0"
+      private: no
+    - name: "TUN_HWR1_IP"
+      prompt: "Enter tunnel to HWR1 ip, like 10.201.0.10"
+      private: no
+    - name: "TUN_HWR1_NETWORK"
+      prompt: "Enter tunnel to HWR1 network, like 10.201.0.8"
+      private: no
+    - name: "ISP_IP"
+      prompt: "Enter ISP IP, like 99.99.99.99"
+      private: no
+    - name: "ISP_PREFIX"
+      prompt: "Enter ISP-Prefix /(?), just intger"
+      default: "30"
+      private: no
+    - name: "ISP_NETWORK"
+      prompt: "Enter ISP-NETWORK, like 99.99.99.99"
+      private: no
+    - name: "ISP_GW"
+      prompt: "Enter ISP-GATEWAY, like 99.99.99.99"
+      private: no
+    - name: "ISP_NAME"
+      prompt: "Enter ISP-NAME, like RT,ER,etc"
+      private: no
+  tasks:
+#Generate cfg from tamplate
+   - name: "Generate conf.rsc"
+     template: src=./cfg-templates/RB2011.j2 dest=./conf.rsc
+     delegate_to: localhost
+#Put config to router via sftp
+   - name: Put file conf.rsc to router.
+     net_put:
+       src: conf.rsc
+       protocol: sftp
+#Import and print config
+   - name: "Import and print conf.rsc"
+     routeros_command:
+        commands:
+          - /import file-name=conf.rsc
+          - /export terse
+     register: import_conf
+   - name: debug print
+     debug: var=import_conf.stdout_lines
