@@ -1,0 +1,56 @@
+---
+- name: juniper initialization playbook #Playbook Name
+  hosts: Filials #target hosts
+#eneable junos module
+  roles:
+  - juniper.junos
+  connection: local
+  gather_facts: no
+#new var "credentionales for Netconf over SSH connection"
+  vars_prompt:
+    - name: "DEVICE_USERNAME"
+      promt: "Device username"
+      private: no
+    - name: "DEVICE_PASSWORD"
+      promt: "Device password"
+      private: yes
+#declare connection var
+  vars:
+    provider_info:
+      host: "{{ inventory_hostname }}"
+      username: "{{ DEVICE_USERNAME }}"
+      password: "{{ DEVICE_PASSWORD }}"
+      port: "{{ ansible_jun_port }}"
+      timeout: "{{ ansible_jun_timeout }}"
+#TASKS
+  tasks:
+#check connection
+  - name: junos check connection
+    wait_for:
+      host: "{{ inventory_hostname }}"
+      port: "{{ ansible_jun_port }}"
+      timeout: 10
+#request system configuration rescue save
+  - name: "Run command on remote host - request system configuration rescue save"
+    juniper_junos_command:
+       provider: "{{ provider_info }}"
+       commands:
+         - request system configuration rescue save
+#request system autorecovery state save
+  - name: "Run command on remote host - request system autorecovery state save"
+    junos_command:
+        provider: "{{ provider_info }}"
+        commands:
+         - request system autorecovery state save
+        wait_for:
+          - result[0] contains BSD
+#check status
+###  - name: "Check status"
+###    junos_command:
+###        provider: "{{ provider_info }}"
+###        commands:
+###          - show chassis alarms
+###    register: result
+###  - name: Print response
+###    debug:
+###        var: result
