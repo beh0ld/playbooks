@@ -1,0 +1,180 @@
+---
+- name: New DJANGO 3.0 deploy
+  hosts: new_DJANGO
+  become: no
+
+  tasks:
+
+   - block:                 #install stuff
+
+     - name: Install packages
+       yum: name={{ item }} state=latest
+       loop:
+       - epel-release
+       - python3-pip
+       - python-pip
+       - postgresql
+       - postgresql-server
+       - postgresql-devel
+       - postgresql-contrib
+       - gcc
+       - python3-devel
+       - python-devel
+       - expect
+       - nginx
+
+   - block:                 #disable SELinux
+
+     - name: Disable SELinux
+       selinux:
+         state: disabled
+
+   - block:                 #postgresql config
+
+     - name: Initialize the Database
+       command: postgresql-setup initdb
+       ignore_errors: yes
+
+     - name: copy pgsql files
+       copy:
+         src: ./django/{{item}}
+         dest: /var/lib/pgsql/data/
+         force: yes
+       with_items:
+         ['pg_hba.conf', 'postgresql.conf']
+
+   - block:                 #install virtualenv, psycopg2 and create project folder
+
+     - name: pip3 upgrade
+       command: pip3 install --upgrade pip
+
+     - name: pip upgrade
+       command: /usr/bin/pip2.7 install --upgrade pip
+
+     - name: venv install
+       command: pip3 install virtualenv
+
+     - name: psycopg2 install
+       command: /usr/bin/pip2.7 install psycopg2
+
+   - block:                 #postgresql db and user create
+
+     - name: pgsql start
+       service: name=postgresql enabled=yes state=started
+
+     - name: Create the "{{ DB_USER }}" user
+       postgresql_user:
+         name: "{{ DB_USER }}"
+         password: "{{ DB_PASSWORD }}"
+       become: true
+       become_user: postgres
+
+     - name: create the "{{ DB_NAME }}" db
+       postgresql_db:
+         name: "{{ DB_NAME }}"
+         owner: "{{ DB_USER }}"
+         template: template0
+         encoding: UTF8
+         lc_collate: 'en_US.UTF-8'
+         lc_ctype: 'en_US.UTF-8'
+       become: true
+       become_user: postgres
+
+   - block:                 #DJANGO install
+
+     - name: create directory if they don't exist
+       file:
+         path: "{{ item }}"
+         state: directory
+         owner: root
+         group: root
+         mode: 0775
+       with_items:
+         - /{{ VENV_NAME }}
+
+     - name: copy project requirements
+       copy:
+         src: ./django/{{item}}
+         dest: /{{ VENV_NAME }}
+         force: yes
+       with_items:
+         ['requirements']
+
+     - name: create virtualenv
+       pip:
+         virtualenv: /{{ VENV_NAME }}
+         virtualenv_site_packages: yes
+         virtualenv_python: python3
+         requirements: /{{ VENV_NAME }}/requirements
+
+     - name: Install a django project
+       command: "/{{ VENV_NAME }}/bin/django-admin.py startproject {{ PROJECT_NAME }} chdir=/{{ VENV_NAME }}"
+       ignore_errors: yes
+
+     - name: Generate  settings.py
+       template: src=./django/settings.py.j2 dest=/{{ VENV_NAME }}/{{ PROJECT_NAME }}/{{ PROJECT_NAME }}/settings.py force=yes
+
+     - name: migrate
+       django_manage:
+         command: migrate
+         app_path: "/{{ VENV_NAME }}/{{ PROJECT_NAME }}"
+         virtualenv: "/{{ VENV_NAME }}"
+
+     - name: createsuperuser
+       django_manage:
+         command: "createsuperuser --noinput --username=admin --email=admin@example.com"
+         app_path: "/{{ VENV_NAME }}/{{ PROJECT_NAME }}"
+         virtualenv: "/{{ VENV_NAME }}"
+       ignore_errors: yes
+
+     - name: Change password tricks
+       template: src=./django/changepassword.sh.j2 dest=/{{ VENV_NAME }}/changepassword.sh mode=0755
+
+     - name: Change password
+       command: "/{{ VENV_NAME }}/changepassword.sh"
+       args:
+         chdir: "/{{ VENV_NAME }}/{{ PROJECT_NAME }}"
+
+     -  name: remove changepassword.sh
+        file: path="/{{ VENV_NAME }}/changepassword.sh" state=absent
+
+     - name: collectstatic
+       django_manage:
+         command: collectstatic
+         app_path: "/{{ VENV_NAME }}/{{ PROJECT_NAME }}"
+         virtualenv: "/{{ VENV_NAME }}"
+
+   - block:                 #GUNICORN install
+
+     - name: gunicorn.socket
+       copy: src=./django/gunicorn.socket dest=/etc/systemd/system
+
+     - name: gunicorn.service
+       template: src=./django/gunicorn.service.j2 dest=/etc/systemd/system/gunicorn.service
+
+     - name: gunicorn start
+       service: name=gunicorn enabled=yes state=started
+
+   - block:                 #NGINX install
+
+     - name: create directory if they don't exist
+       file:
+         path: "/etc/nginx/{{ item }}"
+         state: directory
+         owner: root
+         group: root
+         mode: 0775
+       with_items:
+         ['sites-available', 'sites-enabled' ]
+
+     - name: create site
+       template: src=./django/nginx.j2 dest=/etc/nginx/sites-available/{{ PROJECT_NAME }}
+
+     - name: create site
+       copy: src=./django/nginx.conf dest=/etc/nginx force=yes
+
+     - name: link sites-enabled
+       command: "ln -s /etc/nginx/sites-available/{{ PROJECT_NAME }} /etc/nginx/sites-enabled"
+
+     - name: nginx start
+       service: name=nginx enabled=yes state=started

@@ -101,3 +101,16 @@ ansible_connection=network_cli
 ansible_network_os=routeros
 ansible_user=admin
 ansible_password=XXX
+
+############################################################# NEW DJANGO ###############################################################################################################
+[new_DJANGO]
+test            ansible_host=10.33.0.250  ansible_ssh_pass=XXX
+
+[new_DJANGO:vars]
+DB_NAME=web
+DB_USER=django
+VENV_NAME=django-test
+PROJECT_NAME=django_test
+DB_PASSWORD=xxx
+SU_PASSWORD=xxx
+SUPERUSER=admin
