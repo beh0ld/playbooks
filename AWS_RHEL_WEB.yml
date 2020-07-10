@@ -1,0 +1,6 @@
+---
+- name: Python3 RHEL
+  import_playbook: PYTHON3_RHEL.yml
+  
+- name: DJANGO_RHEL7
+  import_playbook: DJANGO_RHEL7.yml

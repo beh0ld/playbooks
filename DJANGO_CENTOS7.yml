@@ -22,7 +22,8 @@
        - python-devel
        - expect
        - nginx
-
+       - mlocate
+       - mc
    - block:                 #disable SELinux
 
      - name: Disable SELinux

@@ -1,0 +1,18 @@
+---
+- name: PYTHON3 INSTALL RHEL
+  hosts: new_AWS_DJANGO
+  become: true
+
+  tasks:
+
+   - block:                 #install stuff
+
+     - name: Install EPEL
+       command: "rpm -ivh https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm"
+       ignore_errors: yes
+
+     - name: Install packages
+       yum: name={{ item }} state=latest
+       loop:
+       - python3-pip
+       - python3-devel

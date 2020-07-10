@@ -1,27 +1,30 @@
 ---
 - name: New DJANGO 3.0 deploy
-  hosts: new_AWS
+  hosts: new_AWS_DJANGO
   become: true
+  vars:
+  - ansible_python_interpreter: "{{ '/usr/bin/python3.6' }}"
 
   tasks:
+   - set_fact:
+       ansible_python_interpreter: '{{ ansible_playbook_python }}'
+     delegate_to: localhost
+     delegate_facts: true
 
    - block:                 #install stuff
 
      - name: Install packages
        yum: name={{ item }} state=latest
        loop:
-       - epel-release
-       - python3-pip
-       - python-pip
        - postgresql
        - postgresql-server
        - postgresql-devel
        - postgresql-contrib
        - gcc
-       - python3-devel
-       - python-devel
        - expect
        - nginx
+       - mlocate
+       - mc
 
    - block:                 #disable SELinux
 
@@ -48,14 +51,11 @@
      - name: pip3 upgrade
        command: pip3 install --upgrade pip
 
-     - name: pip upgrade
-       command: /usr/bin/pip2.7 install --upgrade pip
-
      - name: venv install
        command: pip3 install virtualenv
 
      - name: psycopg2 install
-       command: /usr/bin/pip2.7 install psycopg2
+       command: pip3 install psycopg2
 
    - block:                 #postgresql db and user create
 
@@ -80,6 +80,7 @@
        become: true
        become_user: postgres
 
+
    - block:                 #DJANGO install
 
      - name: create directory if they don't exist
@@ -91,6 +92,9 @@
          mode: 0775
        with_items:
          - /{{ VENV_NAME }}
+
+     - name: link virtualenv
+       command: "ln -s /usr/local/bin/virtualenv /usr/bin/virtualenv"
 
      - name: copy project requirements
        copy:
@@ -104,7 +108,7 @@
        pip:
          virtualenv: /{{ VENV_NAME }}
          virtualenv_site_packages: yes
-         virtualenv_python: python3
+         virtualenv_python: python3.6
          requirements: /{{ VENV_NAME }}/requirements
 
      - name: Install a django project
@@ -170,7 +174,7 @@
      - name: create site
        template: src=./django/nginx.j2 dest=/etc/nginx/sites-available/{{ PROJECT_NAME }}
 
-     - name: create site
+     - name: nginx conf
        copy: src=./django/nginx.conf dest=/etc/nginx force=yes
 
      - name: link sites-enabled

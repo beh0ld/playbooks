@@ -104,13 +104,29 @@ ansible_password=XXX
 
 ############################################################# NEW DJANGO ###############################################################################################################
 [new_DJANGO]
-test            ansible_host=10.33.0.250  ansible_ssh_pass=XXX
+test            ansible_host=8.8.8.8  ansible_ssh_pass=XXX
 
 [new_DJANGO:vars]
 DB_NAME=web
 DB_USER=django
 VENV_NAME=django-test
 PROJECT_NAME=django_test
-DB_PASSWORD=xxx
-SU_PASSWORD=xxx
+DB_PASSWORD=XXXX
+SU_PASSWORD=XXXX
+SUPERUSER=admin
+
+############################################################# WEB AWS ###############################################################################################################
+[new_AWS]
+WEB            ansible_host=8.8.8.8  ansible_ssh_private_key_file=./key/Iaitskii.pem ansible_user=ec2-user
+
+[new_AWS_DJANGO]
+WEB            ansible_host=8.8.8.8  ansible_ssh_private_key_file=./key/Iaitskii.pem ansible_user=ec2-user
+
+[new_AWS_DJANGO:vars]
+DB_NAME=web
+DB_USER=django
+VENV_NAME=django-test
+PROJECT_NAME=django_test
+DB_PASSWORD=XXXX
+SU_PASSWORD=XXXX
 SUPERUSER=admin
