@@ -1,0 +1,12 @@
+[Unit]
+Description=Jupyter daemon
+After=network.target
+
+[Service]
+User=root
+Group=nginx
+WorkingDirectory=/{{ VENV_NAME }}/{{ PROJECT_NAME }}
+ExecStart=/bin/bash -c "//{{ VENV_NAME }}/bin/python3  //{{ VENV_NAME }}/{{ PROJECT_NAME }}/manage.py shell_plus --notebook"
+
+[Install]
+WantedBy=multi-user.target

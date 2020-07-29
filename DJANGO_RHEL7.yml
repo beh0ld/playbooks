@@ -49,13 +49,13 @@
    - block:                 #install virtualenv, psycopg2 and create project folder
 
      - name: pip3 upgrade
-       command: pip3 install --upgrade pip
+       command: pip3 install --upgrade pip --trusted-host pypi.org --trusted-host files.pythonhosted.org
 
      - name: venv install
-       command: pip3 install virtualenv
+       command: pip3 install virtualenv --trusted-host pypi.org --trusted-host files.pythonhosted.org
 
      - name: psycopg2 install
-       command: pip3 install psycopg2
+       command: pip3 install psycopg2 --trusted-host pypi.org --trusted-host files.pythonhosted.org
 
    - block:                 #postgresql db and user create
 
@@ -95,6 +95,7 @@
 
      - name: link virtualenv
        command: "ln -s /usr/local/bin/virtualenv /usr/bin/virtualenv"
+       ignore_errors: yes
 
      - name: copy project requirements
        copy:
@@ -108,8 +109,9 @@
        pip:
          virtualenv: /{{ VENV_NAME }}
          virtualenv_site_packages: yes
-         virtualenv_python: python3.6
+         virtualenv_python: python3
          requirements: /{{ VENV_NAME }}/requirements
+         extra_args: --trusted-host pypi.org --trusted-host files.pythonhosted.org
 
      - name: Install a django project
        command: "/{{ VENV_NAME }}/bin/django-admin.py startproject {{ PROJECT_NAME }} chdir=/{{ VENV_NAME }}"
@@ -117,6 +119,13 @@
 
      - name: Generate  settings.py
        template: src=./django/settings.py.j2 dest=/{{ VENV_NAME }}/{{ PROJECT_NAME }}/{{ PROJECT_NAME }}/settings.py force=yes
+
+     - name: generagte config jupyter
+       command: "/{{ VENV_NAME }}/bin/python3 /{{ VENV_NAME }}/bin/jupyter-notebook --generate-config --y"
+       ignore_errors: yes
+
+     - name: Generate  jupyter_notebook_config.py
+       template: src=./django/jupyter_notebook_config.py.j2 dest=/home/ec2-user/.jupyter/jupyter_notebook_config.py  force=yes
 
      - name: migrate
        django_manage:
@@ -156,8 +165,14 @@
      - name: gunicorn.service
        template: src=./django/gunicorn.service.j2 dest=/etc/systemd/system/gunicorn.service
 
+     - name: jupyter.service
+       template: src=./django/jupyter.service.j2 dest=/etc/systemd/system/jupyter.service
+
      - name: gunicorn start
        service: name=gunicorn enabled=yes state=started
+
+     - name: jupyter start
+       service: name=jupyter enabled=yes state=started
 
    - block:                 #NGINX install
 
@@ -179,6 +194,7 @@
 
      - name: link sites-enabled
        command: "ln -s /etc/nginx/sites-available/{{ PROJECT_NAME }} /etc/nginx/sites-enabled"
-
+       ignore_errors: yes
+       
      - name: nginx start
        service: name=nginx enabled=yes state=started

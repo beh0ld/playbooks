@@ -111,8 +111,8 @@ DB_NAME=web
 DB_USER=django
 VENV_NAME=django-test
 PROJECT_NAME=django_test
-DB_PASSWORD=XXXX
-SU_PASSWORD=XXXX
+DB_PASSWORD=XXX
+SU_PASSWORD=XXX
 SUPERUSER=admin
 
 ############################################################# WEB AWS ###############################################################################################################
@@ -127,6 +127,6 @@ DB_NAME=web
 DB_USER=django
 VENV_NAME=django-test
 PROJECT_NAME=django_test
-DB_PASSWORD=XXXX
-SU_PASSWORD=XXXX
+DB_PASSWORD=XXX
+SU_PASSWORD=XXX
 SUPERUSER=admin
